@@ -1,0 +1,31 @@
+# Данные
+data/shared
+data/raw/*.csv
+data/processed/*.csv
+data/external/*.csv
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/external/.gitkeep
+
+# Модели
+*.pt
+*.pth
+*.h5
+*.zip
+*.pkl
+*.onnx
+
+# Colab / Jupyter
+.ipynb_checkpoints/
+*.pyc
+__pycache__/
+
+# Секреты
+secrets.txt
+.env
+*.key
+kaggle.json
+
+# Системное
+.DS_Store
+Thumbs.db
