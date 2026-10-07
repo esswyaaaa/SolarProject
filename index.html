@@ -23,7 +23,6 @@
     <!-- ВЕРХНЯЯ СТРОКА: ДАТА + ПОГОДА -->
     <div class="toprow">
 
-      <!-- ДАТА -->
       <div class="card dateblock">
         <div class="card-head">
           <h3>Выбор даты</h3>
@@ -39,7 +38,6 @@
         <div class="card-foot" id="dateFoot">Текущий день: —</div>
       </div>
 
-      <!-- ПОГОДА -->
       <div class="card weatherblock">
         <div class="card-head">
           <h3>🌤 Погода</h3>
@@ -54,7 +52,7 @@
     </div>
 
     <!-- ПАНЕЛИ -->
-    <div class="card">
+    <div class="card panels-card">
       <div class="card-head">
         <h3>Массив панелей</h3>
         <div class="meta" id="panelDateLabel">—</div>
@@ -70,7 +68,7 @@
     </div>
 
     <!-- АНАЛИТИКА -->
-    <div class="card">
+    <div class="card analytics-card">
       <div class="card-head">
         <h3>Аналитика</h3>
         <div class="meta" id="analyticsDateLabel">—</div>
@@ -92,16 +90,11 @@
         </div>
 
         <div class="chartbox"><canvas id="panelChart"></canvas></div>
-        <div style="font-size:10.5px;color:var(--muted);text-align:center" id="chartLabel">
-          Профиль выработки: все панели
-        </div>
+        <div class="chartlabel" id="chartLabel">Профиль выработки: все панели</div>
       </div>
     </div>
 
   </div>
-
-
-
 
   <script src="js/app.js"></script>
 </body>

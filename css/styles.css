@@ -14,86 +14,105 @@
   --red:#ff5c7a;
 }
 
-*{box-sizing:border-box}
+*{box-sizing:border-box;margin:0;padding:0}
+
+html,body{
+  height:100%;
+  overflow:hidden;                 /* ← ничего не выходит за экран */
+}
 
 body{
-  margin:0;
   font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;
   background:var(--bg);
   color:var(--txt);
+  display:flex;
+  flex-direction:column;
 }
 
 /* ============================================================
-   ШАПКА
+   ШАПКА (фиксированная высота)
    ============================================================ */
 header{
-  padding:14px 22px;
+  flex:0 0 auto;
+  padding:10px 18px;
   background:linear-gradient(90deg,#0e1730,#121a2b);
   border-bottom:1px solid var(--line);
   display:flex;justify-content:space-between;align-items:center;
-  gap:16px;flex-wrap:wrap;
+  gap:14px;flex-wrap:wrap;
 }
-header h1{margin:0;font-size:17px}
-.sub{color:var(--muted);font-size:12px}
+header h1{margin:0;font-size:15px}
+.sub{color:var(--muted);font-size:11px}
 .badge{
   background:#1b2a45;color:var(--accent);
-  padding:4px 10px;border-radius:20px;font-size:12px;
+  padding:3px 9px;border-radius:20px;font-size:11px;
   border:1px solid #2b3d5f;
 }
 
 /* ============================================================
-   РАСКЛАДКА
+   РАСКЛАДКА — занимает всё оставшееся место
    ============================================================ */
 .layout{
+  flex:1 1 auto;
+  min-height:0;                     /* критично для вложенного скролла */
   display:grid;
   grid-template-columns: 1fr 1fr;
-  gap:14px;
-  padding:16px;
-  align-items:stretch;
+  grid-template-rows: auto 1fr;     /* toprow — auto, остальное — 1fr */
+  gap:10px;
+  padding:10px;
 }
 
 .toprow{
   grid-column:1 / -1;
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:14px;
-  align-items:stretch;
+  gap:10px;
+  min-height:0;
 }
 
 @media(max-width:1000px){
-  .layout{grid-template-columns:1fr}
+  .layout{grid-template-columns:1fr;grid-template-rows:auto auto auto}
   .toprow{grid-template-columns:1fr}
 }
 
 /* ============================================================
-   КАРТОЧКА
+   КАРТОЧКА — гибкая, сжимается
    ============================================================ */
 .card{
   background:var(--panel);
   border:1px solid var(--line);
-  border-radius:14px;
-  padding:0;
+  border-radius:12px;
   display:flex;flex-direction:column;
   overflow:hidden;
+  min-height:0;                     /* позволяет сжиматься */
 }
 .card-head{
+  flex:0 0 auto;
   display:flex;align-items:center;justify-content:space-between;
   gap:10px;flex-wrap:wrap;
-  padding:12px 16px;
+  padding:8px 14px;
   border-bottom:1px solid var(--line);
   background:linear-gradient(180deg,rgba(255,255,255,.02),transparent);
 }
 .card-head h3{
-  margin:0;font-size:12px;color:var(--txt);
+  margin:0;font-size:11px;color:var(--txt);
   letter-spacing:.6px;text-transform:uppercase;font-weight:600;
-  display:flex;align-items:center;gap:7px;
+  display:flex;align-items:center;gap:6px;
 }
-.card-head .meta{font-size:11px;color:var(--muted)}
+.card-head .meta{font-size:10.5px;color:var(--muted)}
 .card-head .meta b{color:var(--accent)}
-.card-body{padding:14px 16px;display:flex;flex-direction:column;gap:12px;flex:1 1 auto}
+
+.card-body{
+  flex:1 1 auto;
+  min-height:0;                     /* чтобы содержимое могло сжаться */
+  padding:10px 14px;
+  display:flex;flex-direction:column;gap:8px;
+}
+
 .card-foot{
-  padding:10px 16px;border-top:1px dashed var(--line);
-  font-size:11px;color:var(--muted);line-height:1.45;margin-top:auto;
+  flex:0 0 auto;
+  padding:7px 14px;
+  border-top:1px dashed var(--line);
+  font-size:10.5px;color:var(--muted);line-height:1.4;
 }
 
 /* ============================================================
@@ -104,21 +123,21 @@ header h1{margin:0;font-size:17px}
 .datebar{
   display:flex;align-items:center;gap:8px;
   background:var(--panel2);border:1px solid var(--line);
-  border-radius:10px;padding:6px 8px;
-  margin-top:auto;margin-bottom:auto;
+  border-radius:10px;padding:4px 6px;
+  margin:auto 0;
 }
 .datebar .nav{
   background:#0b1220;border:1px solid var(--line);border-radius:7px;
-  color:var(--txt);cursor:pointer;width:34px;height:34px;
+  color:var(--txt);cursor:pointer;width:30px;height:30px;
   display:flex;align-items:center;justify-content:center;
-  font-size:13px;line-height:1;transition:.15s;flex:0 0 auto;
+  font-size:12px;line-height:1;transition:.15s;flex:0 0 auto;
 }
 .datebar .nav:hover{border-color:var(--blue);color:var(--blue);background:#0e1730}
 .datebar .nav:disabled{opacity:.3;cursor:not-allowed}
 .datebar input[type="date"]{
   flex:1;background:transparent;border:none;outline:none;
-  color:var(--txt);font-family:inherit;font-size:14px;font-weight:600;
-  padding:8px 6px;text-align:center;letter-spacing:.3px;
+  color:var(--txt);font-family:inherit;font-size:13px;font-weight:600;
+  padding:6px 4px;text-align:center;
 }
 .datebar input[type="date"]::-webkit-calendar-picker-indicator{
   filter:invert(.75);cursor:pointer;
@@ -128,34 +147,47 @@ header h1{margin:0;font-size:17px}
    БЛОК ПОГОДЫ
    ============================================================ */
 .weatherblock .card-head{background:linear-gradient(90deg,#12283a,#121a2b)}
+
 .weather{
-  display:grid;grid-template-columns:repeat(6,1fr);gap:8px;
-  margin-top:auto;margin-bottom:auto;
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:6px;
+  margin:auto 0;
 }
 .wbox{
-  background:var(--panel2);border:1px solid var(--line);border-radius:10px;
-  padding:9px 4px;text-align:center;
-  display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+  padding:6px 3px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
   transition:.15s;
 }
 .wbox:hover{border-color:#2b4a7a;background:#111d33}
-.wbox .ic{font-size:17px;line-height:1}
-.wbox .v{font-size:12.5px;font-weight:700;line-height:1.1}
-.wbox .l{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+.wbox .ic{font-size:15px;line-height:1}
+.wbox .v{font-size:11px;font-weight:700;line-height:1.1}
+.wbox .l{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.2px}
 
 @media(max-width:1200px){.weather{grid-template-columns:repeat(3,1fr)}}
 
 /* ============================================================
-   ПАНЕЛИ
+   ПАНЕЛИ — вписываются в доступную высоту
    ============================================================ */
-.panels{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+.panels-card .card-body{padding:10px 14px}
+
+.panels{
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  grid-auto-rows:1fr;               /* равные строки по высоте */
+  gap:5px;
+  flex:1 1 auto;
+  min-height:0;
+}
 
 .pv{
-  aspect-ratio:1/1.1;
   background:linear-gradient(160deg,#16305c,#0d1c38);
-  border:1px solid #2b4a7a;border-radius:6px;cursor:pointer;
+  border:1px solid #2b4a7a;border-radius:5px;cursor:pointer;
   position:relative;overflow:hidden;transition:.15s;
-  display:flex;flex-direction:column;justify-content:space-between;padding:4px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:3px 4px;
+  min-height:0;
 }
 .pv:hover{
   transform:translateY(-1px);border-color:var(--blue);
@@ -172,43 +204,59 @@ header h1{margin:0;font-size:17px}
     linear-gradient(0deg,transparent 0 12%,#0a1730 12% 14%,transparent 14% 37%,#0a1730 37% 39%,transparent 39% 62%,#0a1730 62% 64%,transparent 64% 87%,#0a1730 87% 89%,transparent 89%);
   opacity:.7;pointer-events:none;
 }
-.pv .num{font-size:9px;color:#cfe0ff;font-weight:600;z-index:1}
-.pv .kw{font-size:10px;font-weight:700;z-index:1}
+.pv .num{font-size:8.5px;color:#cfe0ff;font-weight:600;z-index:1}
+.pv .kw{font-size:9.5px;font-weight:700;z-index:1}
 .pv.ok .kw{color:var(--green)}
 .pv.warn .kw{color:var(--accent)}
 .pv.bad .kw{color:var(--red)}
 
 .pv .dot{
-  position:absolute;top:4px;right:4px;
-  width:6px;height:6px;border-radius:50%;z-index:1;
+  position:absolute;top:3px;right:3px;
+  width:5px;height:5px;border-radius:50%;z-index:1;
 }
-.pv.ok .dot{background:var(--green);box-shadow:0 0 6px var(--green)}
-.pv.warn .dot{background:var(--accent);box-shadow:0 0 6px var(--accent)}
-.pv.bad .dot{background:var(--red);box-shadow:0 0 6px var(--red)}
+.pv.ok .dot{background:var(--green);box-shadow:0 0 5px var(--green)}
+.pv.warn .dot{background:var(--accent);box-shadow:0 0 5px var(--accent)}
+.pv.bad .dot{background:var(--red);box-shadow:0 0 5px var(--red)}
 
 .legend{
-  display:flex;gap:12px;font-size:10.5px;color:var(--muted);
-  margin-top:10px;flex-wrap:wrap;
+  flex:0 0 auto;
+  display:flex;gap:10px;font-size:10px;color:var(--muted);
+  margin-top:6px;flex-wrap:wrap;
 }
-.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}
 
 /* ============================================================
-   АНАЛИТИКА
+   АНАЛИТИКА — сжимается, график занимает остаток
    ============================================================ */
+.analytics-card .card-body{gap:6px}
+
 .selhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.selhead .name{font-size:16px;font-weight:700}
-.selhead .status{font-size:11px;text-align:right}
-.hint{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.35}
+.selhead .name{font-size:14px;font-weight:700}
+.selhead .status{font-size:10.5px;text-align:right}
+.hint{font-size:10px;color:var(--muted);line-height:1.3}
 
-.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.kv div{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
-.kv small{display:block;color:var(--muted);font-size:9.5px;text-transform:uppercase;letter-spacing:.4px}
-.kv b{font-size:13.5px}
+.kv{
+  display:grid;grid-template-columns:1fr 1fr;gap:5px;
+}
+.kv div{
+  background:var(--panel2);border:1px solid var(--line);
+  border-radius:7px;padding:5px 7px;
+}
+.kv small{
+  display:block;color:var(--muted);font-size:9px;
+  text-transform:uppercase;letter-spacing:.4px;
+}
+.kv b{font-size:12px}
 
-.chartbox{flex:1 1 auto;display:flex;align-items:stretch;min-height:110px;margin-top:8px}
+.chartbox{
+  flex:1 1 auto;
+  min-height:0;                     /* график сжимается */
+  display:flex;align-items:stretch;
+  margin-top:4px;
+}
 .chartbox canvas{width:100%!important;height:100%!important}
 
-/* ============================================================
-   ПОДВАЛ
-   ============================================================ */
-footer{padding:12px;text-align:center;color:var(--muted);font-size:11px}
+.chartlabel{
+  flex:0 0 auto;
+  font-size:10px;color:var(--muted);text-align:center;
+}
