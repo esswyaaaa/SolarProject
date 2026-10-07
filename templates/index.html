@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Solar Forecasting — панели и аналитика</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#121a2b; --line:#22304a;
+    --txt:#e6edf7; --muted:#8ea2c0;
+    --accent:#ffb84d; --green:#3ddc97; --blue:#4da3ff; --red:#ff5c7a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt)}
+  header{padding:14px 22px;background:linear-gradient(90deg,#0e1730,#121a2b);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  header h1{margin:0;font-size:17px}
+  .sub{color:var(--muted);font-size:12px}
+  .badge{background:#1b2a45;color:var(--accent);padding:4px 10px;border-radius:20px;font-size:12px;border:1px solid #2b3d5f}
+
+  /* ДВЕ КОЛОНКИ */
+  .layout{
+    display:grid;
+    grid-template-columns: 1fr 340px;
+    gap:14px;
+    padding:16px;
+    align-items:stretch;
+  }
+  .col-right{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .col-right > .card{flex:0 0 auto}
+  .col-right > .card.grow{flex:1 1 auto; display:flex; flex-direction:column}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .card h3{margin:0 0 10px;font-size:12px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;font-weight:600}
+
+  @media(max-width:1000px){
+    .layout{grid-template-columns:1fr}
+  }
+
+  /* СЕТКА ПАНЕЛЕЙ */
+  .panels{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+  .pv{
+    aspect-ratio:1/1.15;
+    background:linear-gradient(160deg,#16305c,#0d1c38);
+    border:1px solid #2b4a7a;border-radius:8px;cursor:pointer;
+    position:relative;overflow:hidden;transition:.18s;
+    display:flex;flex-direction:column;justify-content:space-between;padding:6px;
+  }
+  .pv:hover{transform:translateY(-2px);border-color:#4da3ff;box-shadow:0 6px 18px rgba(77,163,255,.25)}
+  .pv.active{border-color:#ffb84d;box-shadow:0 0 0 2px #ffb84d inset, 0 6px 18px rgba(255,184,77,.3)}
+  .pv::before{
+    content:"";position:absolute;inset:0;
+    background:
+      linear-gradient(90deg,transparent 0 12%,#0a1730 12% 14%,transparent 14% 37%,#0a1730 37% 39%,transparent 39% 62%,#0a1730 62% 64%,transparent 64% 87%,#0a1730 87% 89%,transparent 89%),
+      linear-gradient(0deg,transparent 0 12%,#0a1730 12% 14%,transparent 14% 37%,#0a1730 37% 39%,transparent 39% 62%,#0a1730 62% 64%,transparent 64% 87%,#0a1730 87% 89%,transparent 89%);
+    opacity:.7;pointer-events:none;
+  }
+  .pv .num{font-size:11px;color:#cfe0ff;font-weight:600;z-index:1}
+  .pv .kw{font-size:13px;font-weight:700;z-index:1}
+  .pv.ok .kw{color:#3ddc97}
+  .pv.warn .kw{color:#ffb84d}
+  .pv.bad .kw{color:#ff5c7a}
+  .pv .dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;z-index:1}
+  .pv.ok .dot{background:#3ddc97;box-shadow:0 0 8px #3ddc97}
+  .pv.warn .dot{background:#ffb84d;box-shadow:0 0 8px #ffb84d}
+  .pv.bad .dot{background:#ff5c7a;box-shadow:0 0 8px #ff5c7a}
+
+  .legend{display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+
+  /* АНАЛИТИКА */
+  .selhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .selhead .name{font-size:16px;font-weight:700}
+  .selhead .status{font-size:11px;text-align:right}
+  .hint{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.35}
+  .kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .kv div{background:#0f1830;border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+  .kv small{display:block;color:var(--muted);font-size:9.5px;text-transform:uppercase;letter-spacing:.4px}
+  .kv b{font-size:13.5px}
+
+  /* ПОГОДА */
+  .weather{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .wbox{background:#0f1830;border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center}
+  .wbox .ic{font-size:19px}
+  .wbox .v{font-size:13px;font-weight:700;margin-top:2px}
+  .wbox .l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+
+  footer{padding:12px;text-align:center;color:var(--muted);font-size:11px}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>☀️ Solar Forecasting & Microgrid Management</h1>
+    <div class="sub">Массив СЭС: 24 панели · нажмите на панель, чтобы увидеть аналитику</div>
+  </div>
+  <span class="badge">Обновлено 12:45</span>
+</header>
+
+<div class="layout">
+
+  <!-- ЛЕВАЯ КОЛОНКА: ПАНЕЛИ -->
+  <div class="card">
+    <h3>🔲 Массив панелей</h3>
+    <div class="panels" id="panels"></div>
+    <div class="legend">
+      <span><i style="background:#3ddc97"></i>Работает штатно</span>
+      <span><i style="background:#ffb84d"></i>Сниженная выработка</span>
+      <span><i style="background:#ff5c7a"></i>Неисправность / тень</span>
+    </div>
+  </div>
+
+  <!-- ПРАВАЯ КОЛОНКА: АНАЛИТИКА + ПОГОДА -->
+  <div class="col-right">
+
+    <!-- АНАЛИТИКА -->
+    <div class="card grow">
+      <h3>📋 Аналитика</h3>
+      <div class="selhead">
+        <div class="name" id="selName">Все панели</div>
+        <div class="status" id="selStatus" style="color:#3ddc97">● 22 из 24 работают</div>
+      </div>
+      <div class="hint" id="selHint">Кликните на панель, чтобы увидеть данные по ней. Повторный клик — сброс.</div>
+
+      <div class="kv">
+        <div><small>Выработка за день</small><b id="k1">—</b></div>
+        <div><small>Средняя мощность</small><b id="k2">—</b></div>
+        <div><small>Средний КПД</small><b id="k3">—</b></div>
+        <div><small>Средняя темп.</small><b id="k4">—</b></div>
+        <div><small>Наработка</small><b id="k5">—</b></div>
+        <div><small>Деградация</small><b id="k6">—</b></div>
+      </div>
+
+      <canvas id="panelChart" height="110" style="margin-top:10px"></canvas>
+      <div style="font-size:10.5px;color:var(--muted);text-align:center;margin-top:4px" id="chartLabel">
+        Профиль выработки: все панели
+      </div>
+    </div>
+
+    <!-- ПОГОДА -->
+    <div class="card">
+      <h3>🌤 Информация о погоде</h3>
+      <div class="weather" id="weather"></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.4">
+        К 16:00 ожидается рост облачности до 65%.<br>
+        Снижение генерации: <b style="color:#ffb84d">−28%</b>.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>Прототип по эскизу · Solar Forecasting & Microgrid Management</footer>
+
+<script>
+/* ---------- ДАННЫЕ ПАНЕЛЕЙ ---------- */
+const N = 24;
+const panelData = [];
+for(let i=1;i<=N;i++){
+  const r = Math.random();
+  let state='ok';
+  if(r>0.85) state='bad';
+  else if(r>0.6) state='warn';
+  const kw = state==='ok' ? (300+Math.random()*30)
+           : state==='warn' ? (230+Math.random()*40)
+           : (120+Math.random()*80);
+  panelData.push({
+    id:i, state, kw: Math.round(kw),
+    day: +(kw*7/1000).toFixed(2),
+    kpd: +(18 + Math.random()*2).toFixed(1),
+    temp: Math.round(35 + Math.random()*10),
+    hours: 4000 + Math.round(Math.random()*500),
+    degr: +(0.5 + Math.random()*0.3).toFixed(1)
+  });
+}
+
+let selected = null;
+
+/* ---------- РЕНДЕР ПАНЕЛЕЙ ---------- */
+const panelsBox = document.getElementById('panels');
+function renderPanels(){
+  panelsBox.innerHTML='';
+  panelData.forEach(p=>{
+    const el=document.createElement('div');
+    el.className='pv '+p.state+(p.id===selected?' active':'');
+    el.innerHTML=`
+      <div class="dot"></div>
+      <div class="num">№${p.id}</div>
+      <div class="kw">${p.kw} Вт</div>
+    `;
+    el.onclick=()=>{
+      selected = (selected === p.id) ? null : p.id;
+      renderPanels();
+      updateAnalytics();
+    };
+    panelsBox.appendChild(el);
+  });
+}
+
+/* ---------- АНАЛИТИКА ---------- */
+let panelChart;
+const labelsH = ['00','03','06','09','12','15','18','21'];
+
+function updateAnalytics(){
+  const nameEl = document.getElementById('selName');
+  const stEl   = document.getElementById('selStatus');
+  const hintEl = document.getElementById('selHint');
+  const chartLabel = document.getElementById('chartLabel');
+
+  let k1,k2,k3,k4,k5,k6, prof, title;
+
+  if(selected === null){
+    const okCount  = panelData.filter(p=>p.state==='ok').length;
+    const totalKW  = panelData.reduce((s,p)=>s+p.kw,0);
+    const totalDay = panelData.reduce((s,p)=>s+p.day,0);
+    const avgKPD   = panelData.reduce((s,p)=>s+p.kpd,0)/N;
+    const avgT     = panelData.reduce((s,p)=>s+p.temp,0)/N;
+    const avgH     = panelData.reduce((s,p)=>s+p.hours,0)/N;
+    const avgD     = panelData.reduce((s,p)=>s+p.degr,0)/N;
+
+    nameEl.textContent = 'Все панели';
+    stEl.textContent = `● ${okCount} из ${N} работают`;
+    stEl.style.color = okCount === N ? '#3ddc97' : '#ffb84d';
+    hintEl.textContent = 'Кликните на панель, чтобы увидеть данные по ней. Повторный клик — сброс.';
+
+    k1 = totalDay.toFixed(1)+' кВт·ч';
+    k2 = (totalKW/N).toFixed(0)+' Вт';
+    k3 = avgKPD.toFixed(1)+'%';
+    k4 = '+'+avgT.toFixed(0)+'°C';
+    k5 = Math.round(avgH)+' ч';
+    k6 = avgD.toFixed(1)+'%/год';
+
+    const base = totalKW/1000;
+    prof = [0,0,0.1,0.4,0.8,1.0,0.7,0.2].map(v=>+(v*base*6).toFixed(2));
+    title = 'Профиль выработки: все панели';
+
+  } else {
+    const p = panelData.find(x=>x.id===selected);
+    const map = {ok:['● штатно','#3ddc97'],warn:['● снижена','#ffb84d'],bad:['● неисправность','#ff5c7a']};
+
+    nameEl.textContent = 'Панель №'+p.id;
+    stEl.textContent = map[p.state][0];
+    stEl.style.color = map[p.state][1];
+    hintEl.textContent = 'Повторный клик по этой панели — сброс к данным по всем панелям.';
+
+    k1 = p.day+' кВт·ч';
+    k2 = p.kw+' Вт';
+    k3 = p.kpd+'%';
+    k4 = '+'+p.temp+'°C';
+    k5 = p.hours+' ч';
+    k6 = p.degr+'%/год';
+
+    const base = p.kw/1000;
+    prof = [0,0,0.1,0.4,0.8,1.0,0.7,0.2].map(v=>+(v*base*6).toFixed(2));
+    title = 'Профиль выработки: панель №'+p.id;
+  }
+
+  document.getElementById('k1').textContent = k1;
+  document.getElementById('k2').textContent = k2;
+  document.getElementById('k3').textContent = k3;
+  document.getElementById('k4').textContent = k4;
+  document.getElementById('k5').textContent = k5;
+  document.getElementById('k6').textContent = k6;
+  chartLabel.textContent = title;
+
+  if(panelChart) panelChart.destroy();
+  panelChart = new Chart(document.getElementById('panelChart'),{
+    type:'line',
+    data:{labels:labelsH,datasets:[{
+      data:prof,
+      borderColor:'#ffb84d',
+      backgroundColor:'rgba(255,184,77,.15)',
+      fill:true,tension:.35,pointRadius:0,borderWidth:2
+    }]},
+    options:{plugins:{legend:{display:false}},scales:{
+      x:{ticks:{color:'#8ea2c0',font:{size:10}},grid:{display:false}},
+      y:{ticks:{color:'#8ea2c0',font:{size:10}},grid:{color:'#1b2740'},
+         title:{display:true,text:'кВт',color:'#8ea2c0',font:{size:10}}}
+    }}
+  });
+}
+
+/* ---------- ПОГОДА ---------- */
+const weather = [
+  {ic:'☀️', v:'6.8 кВт/м²', l:'Инсоляция'},
+  {ic:'🌡️', v:'+24°C',      l:'Воздух'},
+  {ic:'💨', v:'3.4 м/с',    l:'Ветер'},
+  {ic:'☁️', v:'30%',        l:'Облачность'},
+  {ic:'💧', v:'42%',        l:'Влажность'},
+  {ic:'🌫️', v:'12 км',      l:'Видимость'}
+];
+const wbox = document.getElementById('weather');
+weather.forEach(w=>{
+  wbox.insertAdjacentHTML('beforeend',
+    `<div class="wbox"><div class="ic">${w.ic}</div><div class="v">${w.v}</div><div class="l">${w.l}</div></div>`);
+});
+
+/* init */
+renderPanels();
+updateAnalytics();
+</script>
+</body>
+</html>
